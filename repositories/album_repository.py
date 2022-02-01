@@ -22,7 +22,6 @@ def select_all():
         albums.append(album)
     return albums
 
-
 def save(album):
     sql= """INSERT INTO albums 
     (album_name, artist_id, genre)
@@ -31,9 +30,10 @@ def save(album):
     RETURNING id
     """
 
-    values = [album.album_name, album.artist_id.id, album.genre]
+    values = [album.album_name, album.artist.id, album.genre]
     result = run_sql(sql, values)
     album.id = result[0]['id']
+    return album
 
 
 def select(id):
@@ -43,7 +43,7 @@ def select(id):
     result = run_sql(sql, values)[0]
 
     if result is not None:
-        album = Album(result['album_name'], result['artist_id'], result['genre'], result['id'])
+        album = Album(result['album_name'], result['artist'], result['genre'], result['id'])
         return album
 
 
@@ -54,4 +54,35 @@ def delete_all():
 def delete_one(id):
     sql = "DELETE FROM albums WHERE id = %s"
     values = [id]
+    run_sql(sql, values)
+
+
+def album_for_artist(artist):
+    albums = []
+
+    sql  = "SELECT * FROM albums WHERE artist = %s"
+    values = [artist.id]
+    results = run_sql(sql, values)
+
+    for row in results:
+        album = Album(row['album_name'], artist, row['genre'], row['id'])
+        albums.append(album)
+
+    return albums
+
+def update(album):
+
+    sql ="""
+    UPDATE albums
+    SET(album_name, artist, genre)
+    = (%s, %s, %s)
+    WHERE id = %s
+    """
+
+    values = [
+        album.album_name,
+        album.artist.id,
+        album.genre,
+        album.id
+    ]
     run_sql(sql, values)
